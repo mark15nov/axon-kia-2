@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { exportSlidesToPdf, exportSlidesToPptx } from './reportExport.js';
 import {
   REPORT_META, HEADLINE, FINANCIAL_KPIS,
   PNL_MTD, PNL_YTD, REVENUE_SUMMARY, PNL_SUMMARY_TABLE,
@@ -1114,13 +1115,42 @@ function SlideExecSummary({ n, total }) {
 // ============================================================================
 export default function Report({ onClose }) {
   const rootRef = useRef(null);
+  const [exporting, setExporting] = useState(null); // null | 'pdf' | 'pptx'
+  const [progress, setProgress] = useState({ cur: 0, total: 0 });
 
   useEffect(() => {
     document.body.classList.add('report-open');
     return () => document.body.classList.remove('report-open');
   }, []);
 
-  const handlePrint = () => window.print();
+  const runExport = async (kind) => {
+    console.log('[report] runExport called:', kind);
+    if (exporting) {
+      console.log('[report] already exporting, ignoring click');
+      return;
+    }
+    setExporting(kind);
+    setProgress({ cur: 0, total: 0 });
+    try {
+      const onProgress = (cur, total) => {
+        console.log('[report] progress:', cur, '/', total);
+        setProgress({ cur, total });
+      };
+      console.log('[report] starting export pipeline...');
+      if (kind === 'pdf') {
+        await exportSlidesToPdf({ onProgress });
+      } else {
+        await exportSlidesToPptx({ onProgress });
+      }
+      console.log('[report] export complete');
+    } catch (err) {
+      console.error('[report] Export failed:', err);
+      alert(`Export failed: ${err?.message ?? err}\n\nCheck the browser console for details.`);
+    } finally {
+      setExporting(null);
+      setProgress({ cur: 0, total: 0 });
+    }
+  };
 
   // Total slide count
   const slides = [];
@@ -1190,14 +1220,50 @@ export default function Report({ onClose }) {
           </div>
         </div>
         <div className="rep-toolbar-right">
-          <button className="rep-btn rep-btn-ghost" onClick={onClose}>← Volver al Dashboard</button>
-          <button className="rep-btn rep-btn-primary" onClick={handlePrint}>↓ Exportar / Imprimir PDF</button>
+          <button className="rep-btn rep-btn-ghost" onClick={onClose} disabled={!!exporting}>
+            ← Volver al Dashboard
+          </button>
+          <button
+            className="rep-btn rep-btn-secondary"
+            onClick={() => runExport('pptx')}
+            disabled={!!exporting}
+            aria-busy={exporting === 'pptx'}
+          >
+            {exporting === 'pptx' ? `Generando… ${progress.cur}/${progress.total || realTotal}` : '↓ Descargar PPTX'}
+          </button>
+          <button
+            className="rep-btn rep-btn-primary"
+            onClick={() => runExport('pdf')}
+            disabled={!!exporting}
+            aria-busy={exporting === 'pdf'}
+          >
+            {exporting === 'pdf' ? `Generando… ${progress.cur}/${progress.total || realTotal}` : '↓ Descargar PDF'}
+          </button>
         </div>
       </div>
       <main className="rep-deck">{stamped}</main>
-      <div className="rep-toolbar-foot no-print">
-        Tip: en el diálogo de impresión, elige <b>Guardar como PDF</b> · orientación <b>Horizontal</b> · márgenes <b>None</b>.
-      </div>
+      {exporting && (
+        <div className="rep-export-overlay no-print" role="status" aria-live="polite">
+          <div className="rep-export-card">
+            <div className="rep-export-spinner" />
+            <div className="rep-export-title">
+              Generando {exporting === 'pdf' ? 'PDF' : 'PPTX'}…
+            </div>
+            <div className="rep-export-progress">
+              Slide <b>{progress.cur || 0}</b> de <b>{progress.total || realTotal}</b>
+            </div>
+            <div className="rep-export-bar">
+              <div
+                className="rep-export-bar-fill"
+                style={{ width: `${progress.total ? (progress.cur / progress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="rep-export-hint">
+              Se conserva el diseño exacto de cada slide (4:3 landscape).
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

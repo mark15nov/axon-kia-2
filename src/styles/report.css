@@ -99,6 +99,74 @@ body.report-open { overflow: hidden; }
   box-shadow: 0 6px 18px rgba(230, 0, 18, 0.4);
 }
 .rep-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(230, 0, 18, 0.5); }
+.rep-btn-secondary {
+  background: rgba(255, 255, 255, 0.10);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.rep-btn-secondary:hover { background: rgba(255, 255, 255, 0.16); }
+.rep-btn[disabled] { opacity: 0.6; cursor: progress; }
+
+/* Export overlay */
+.rep-export-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 7, 10, 0.78);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+}
+.rep-export-card {
+  width: min(420px, 90vw);
+  background: var(--rep-darker);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 28px;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.rep-export-spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: var(--rep-red);
+  margin: 0 auto 16px;
+  animation: rep-spin 0.9s linear infinite;
+}
+@keyframes rep-spin { to { transform: rotate(360deg); } }
+.rep-export-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.rep-export-progress {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.rep-export-progress b { color: #fff; font-weight: 800; }
+.rep-export-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.rep-export-bar-fill {
+  height: 100%;
+  background: var(--rep-accent-grad);
+  transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rep-export-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.52);
+  letter-spacing: 0.02em;
+}
 
 .rep-toolbar-foot {
   text-align: center;
@@ -289,10 +357,7 @@ body.report-open { overflow: hidden; }
   text-wrap: balance;
 }
 .rep-cover-accent {
-  background: linear-gradient(135deg, #ff4858 0%, #E60012 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #ff4858;
 }
 .rep-cover-period {
   font-size: 17px;
